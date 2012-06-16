@@ -6,10 +6,10 @@ class Player
 		
 	def initialize(symbol)
 		@symbol = symbol
-		@w1 = 1
-		@w2 = 1
-		@w3 = 1
-		@w4 = 1
+		@w1 = Random.rand(-5..5)
+		@w2 = Random.rand(-5..5)
+		@w3 = Random.rand(-5..5)
+		@w4 = Random.rand(-5..5)
 	end
 
 	def calculate_board_value(board, opponent)
@@ -77,7 +77,7 @@ class Player
 		board_val = calculate_board_value(board, opponent)
 		next_board_val = calculate_board_value(next_board, opponent)
 
-		adj = 0.001*(next_board_val-board_val)	
+		adj = 0.01*(next_board_val-board_val)	
 			
 		@w1 = @w1+(adj*x1(board))
 		@w2 = @w2+(adj*x2(board, opponent))
