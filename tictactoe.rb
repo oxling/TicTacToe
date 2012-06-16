@@ -20,6 +20,9 @@ def run_games(games, verbose)
 	games.times { |i|
 		g.play
 		if verbose == true
+			puts "----------"
+			puts "Game #{i+1}:"
+			puts "----------"
 			g.print_game
 		end
 
