@@ -20,7 +20,7 @@ class Player
 		elsif status == :lose
 			return -100
 		elsif status == :draw
-			return 100
+			return 0
 		else		
 			return @w1*x1(board)
 						+@w2*x2(board, opponent)
