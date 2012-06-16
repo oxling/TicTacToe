@@ -5,7 +5,7 @@ require './game.rb'
 require 'rubygems'
 require 'ruby-debug'
 
-def run_games(games)
+def run_games(games, verbose)
 	puts "Running #{games} games"
 
 	p1 = Player.new(:X)
@@ -19,6 +19,10 @@ def run_games(games)
 	
 	games.times { |i|
 		g.play
+		if verbose == true
+			g.print_game
+		end
+
 			
 		if g.winner == p1
 			p1_win_count+=1
@@ -31,8 +35,10 @@ def run_games(games)
 		p1.learn(g)
 		p2.learn(g)
 		
-		print "\r#{i+1}/#{games} complete. "
-		print "#{p1_win_count} wins, #{p2_win_count} losses, #{draw_count} draws"
+		if verbose == false
+			print "\r#{i+1}/#{games} complete. "
+			print "#{p1_win_count} wins, #{p2_win_count} losses, #{draw_count} draws"
+		end
 	
 		g.player_one = g.player_one == p1 ? p2 : p1
 		g.player_two = g.player_two == p2 ? p1 : p2
@@ -49,12 +55,19 @@ def run_games(games)
 	puts "\n"
 end
 
-ARGV.each do |games|
-	
-	if games.to_i == 0
-		puts "\"#{games}\" is not a valid number of games"
-		Process.exit
+verbose = false
+num_games = 0
+ARGV.each do |arg|
+	if arg.to_i == 0
+		if (arg == "-v" or arg == "-verbose")
+			verbose = true
+		else
+			puts "\"#{arg}\" is not valid input"
+			Process.exit
+		end
+	else
+		num_games = arg.to_i
 	end
-	
-	run_games(games.to_i)
 end
+
+run_games(num_games, verbose)

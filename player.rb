@@ -16,7 +16,7 @@ class Player
 		status = board.game_status(self, opponent)
 		
 		if status == :win
-			return 0
+			return 100
 		elsif status == :lose
 			return -100
 		elsif status == :draw
