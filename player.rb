@@ -1,7 +1,9 @@
 require './board.rb'
 
-class Player
 
+class Player
+	@@learn_adj=0.1
+	
 	attr_accessor :symbol
 		
 	def initialize(symbol)
@@ -92,7 +94,7 @@ class Player
 		board_val = calculate_board_value(board, opponent)
 		next_board_val = calculate_board_value(next_board, opponent)
 
-		adj = 0.01*(next_board_val-board_val)	
+		adj = @@learn_adj*(next_board_val-board_val)	
 			
 		@w1 = @w1+(adj*x1(board))
 		@w2 = @w2+(adj*x2(board, opponent))
@@ -104,7 +106,7 @@ class Player
 		board_val = calculate_board_value(board, opponent)
 		next_board_val = calculate_board_value(next_board, opponent)
 				
-		adj = 0.01*(next_board_val-board_val)	
+		adj = @@learn_adj*(next_board_val-board_val)	
 			
 		@w1 = @w1+(adj*x1(board))
 		@w2 = @w2+(adj*x2(board, opponent))
