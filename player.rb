@@ -60,17 +60,32 @@ class Player
 		end
 	end
 	
-	def learn(game)
+	def learn(game, verbose)
+	
+		if verbose
+			puts "Player #{@symbol} learning:"
+		end
+		
 		opponent = game.opponent(self)
+		
 		game.history.reverse.each { |board|
 			turn = game.history.index(board)
 			#find the next turn
 			if (turn > 0)
 				next_board = game.history[turn]
 				board = game.history[turn-1]
-				adjust_weights(opponent, board, next_board)
+				if verbose
+					adjust_weights_verbose(opponent, board, next_board)
+				else
+					adjust_weights(opponent, board, next_board)
+				end
 			end
-		}
+		}	
+		
+		if verbose
+			puts "\n"
+		end
+		
 	end
 	
 	def adjust_weights(opponent, board, next_board)
@@ -89,21 +104,16 @@ class Player
 		board_val = calculate_board_value(board, opponent)
 		next_board_val = calculate_board_value(next_board, opponent)
 				
-		adj = 0.1*(next_board_val-board_val)	
+		adj = 0.01*(next_board_val-board_val)	
 			
 		@w1 = @w1+(adj*x1(board))
 		@w2 = @w2+(adj*x2(board, opponent))
 		@w3 = @w3+(adj*x3(board))
 		@w4 = @w4+(adj*x4(board, opponent))
 		
-		puts "Player #{@symbol} learning:"
 		puts "Training value for board = #{next_board_val}"
-		print "Adjusted function: "
-		print "(%0.1f * #{x1(board)})" % @w1
-		print "+(%0.1f * #{x2(board,opponent)})" % @w2
-		print "+(%0.1f * #{x3(board)})" % @w3 
-		print "+(%0.1f * #{x4(board, opponent)})\n" % @w4
 		board.print_board
+		puts "\n"
 	end
 	
 	def print_weights
