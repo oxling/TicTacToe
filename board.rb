@@ -69,20 +69,17 @@ class Board
 	def diagonals
 		d1 = Array.new(@size) { |i| @board[i][i] }
 		d2 = Array.new(@size) { |i| @board[i][@size-1-i] }
-		
 		return [d1, d2]
 	end
 	
-	def self.valid_next_boards(start_board, player)
+	def self.valid_next_moves(start_board)
 		list = Array.new
 			
 			start_board.size.times { |row|
 				start_board.size.times { |col|
 
 					if start_board[col, row] == nil
-						next_board = start_board.clone
-						next_board.play(col, row, player)
-						list.push(next_board)
+						list.push([col, row])
 					end
 				}
 			}

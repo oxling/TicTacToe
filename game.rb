@@ -20,8 +20,9 @@ class Game
 		played = 0
 		board = Board.new(@size)
 		@history = Array.new
+		@winner = nil
 
-		player = player_one
+		player = @player_one
 		
 		while played < board.number_of_squares
 			board = player.make_move(board, opponent(player))
