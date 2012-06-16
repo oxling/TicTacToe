@@ -8,7 +8,8 @@ class Player
 		@symbol = symbol
 		@w1 = 1
 		@w2 = -1
-		@w3 = 5
+		@w3 = 10
+		@w4 = -10
 	end
 
 	def calculate_board_value(board, opponent)
@@ -23,7 +24,8 @@ class Player
 		else		
 			return @w1*x1(board)
 						+@w2*x2(board, opponent)
-						+@w3*x3(board, opponent)
+						+@w3*x3(board)
+						+@w4*x4(board, opponent)
 		end
 	end
 
@@ -73,12 +75,13 @@ class Player
 			
 		@w1 = @w1+adj*x1(board)
 		@w2 = @w2+adj*x2(board, opponent)
-		@w3 = @w3+adj*x3(board, opponent)
+		@w3 = @w3+adj*x3(board)
+		@w4 = @w4+adj*x4(board, opponent)
 		
 	end
 	
 	def print_weights
-		puts "[#{@w1}, #{@w2}, #{@w3}]"
+		puts "[#{@w1}, #{@w2}, #{@w3}, #{@w4}]"
 	end
 	
 	private :adjust_weights
@@ -93,17 +96,13 @@ class Player
 		board.total_adjacent(opponent.symbol)
 	end
 	
-	def x3(board, opponent)
-		
-		middle_square = board[1,1]
-		if middle_square == @symbol
-			return 1
-		elsif middle_square == opponent.symbol
-			return -1
-		else
-			return 0
-		end
-		
+	def x3(board)
+		board.potential_winning_squares(@symbol)
 	end
 	
+	def x4(board, opponent)
+		board.potential_winning_squares(opponent.symbol)
+	end
+
+		
 end

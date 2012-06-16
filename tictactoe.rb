@@ -5,7 +5,7 @@ require './game.rb'
 require 'rubygems'
 require 'ruby-debug'
 
-games = 10
+games = 100
 
 puts "Running #{games} games"
 

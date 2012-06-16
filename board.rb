@@ -101,7 +101,15 @@ class Board
 		end
 		
 		adj	
-		
+	end
+	
+	def potential_win(array, player)
+		square_count = array.count(player)
+		if array.count(nil) == 1 and square_count == @size-1
+			return true
+		else
+			return false
+		end
 	end
 	
 	def total_adjacent(player)
@@ -121,6 +129,16 @@ class Board
 			end
 		}
 		win
+	end
+	
+	def potential_winning_squares(player)
+		count = 0
+		(rows + columns + diagonals).each { |x|
+			if potential_win(x, player)
+				count+=1
+			end
+		}
+		count
 	end
 	
 	def used_squares
