@@ -5,6 +5,7 @@ class Game
 	
 	def initialize(size)
 		@size = size
+		@history = Array.new
 	end
 	
 	def opponent(current_player)
@@ -15,7 +16,7 @@ class Game
 		played = 0
 		
 		@board = Board.new(@size)
-		@history = Array.new
+		@history.clear
 		@winner = nil
 
 		@player_one = player_one
@@ -39,6 +40,7 @@ class Game
 			player = opponent(player)
 			played+=1
 		end
+		
 	end
 	
 	def print_game
