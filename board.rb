@@ -96,9 +96,22 @@ class Board
 					end
 				}
 			}
+			
 		list
 	end
 	
+	#Iterator that checks through all rows, columns and diagonals, returning the matching sum
+	def check_all_sets(&b)
+		count = 0
+		self.all_sets { |arr|
+			if yield(arr) == true
+				count+=1
+			end
+		}
+		count
+	end
+	
+	#Adjacencies in a set, such as [X, X, nil]
 	def adjacent_squares(array, player)
 		found = false
 		adj = 0
@@ -111,16 +124,6 @@ class Board
 		end
 		
 		adj	
-	end
-		
-	def check_all_sets(&b)
-		count = 0
-		self.all_sets { |arr|
-			if yield(arr) == true
-				count+=1
-			end
-		}
-		count
 	end
 	
 	#A row that is contested between two players
@@ -159,6 +162,7 @@ class Board
 		end
 	end
 	
+	#A set that wins (ie, 3 in a row)
 	def winning_set?(array, player)
 		p_count = array.count(player)
 		if p_count == @size
@@ -168,6 +172,7 @@ class Board
 		end
 	end
 	
+	#Total number of adjacencies on the board
 	def total_adjacent_squares(player)
 		adj = 0
 		(rows + columns + diagonals).each { |x|
@@ -177,9 +182,9 @@ class Board
 	end
 	
 	def did_player_win?(player)
-		win = false		
-		(rows + columns + diagonals).each { |x|
-			if adjacent_squares(x, player) == winning_size
+		win = false
+		check_all_sets { |arr|
+			if winning_set?(arr, player)
 				win = true
 				break
 			end

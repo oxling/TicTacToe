@@ -13,6 +13,7 @@ class Game
 		
 	def play(player_one, player_two)
 		played = 0
+		
 		@board = Board.new(@size)
 		@history = Array.new
 		@winner = nil
@@ -73,6 +74,7 @@ class Game
 		end
 	end
 	
+	# Recreate the board at a particular turn
 	def board_at_turn(turn)
 		board = Board.new(@board.size)
 		

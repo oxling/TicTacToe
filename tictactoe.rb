@@ -41,8 +41,6 @@ def run_games(games, game_verbose, learn_verbose)
 		end
 		
 		Player.learn(g, learn_verbose)
-		#p1.learn(g, learn_verbose)
-		#p2.learn(g, learn_verbose)
 		
 		if game_verbose == false and learn_verbose == false
 			print "\r#{i+1}/#{games} complete. "

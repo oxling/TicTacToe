@@ -5,13 +5,14 @@ class Player
 	attr_accessor :symbol, :opponent
 	@@calc_count=0
 	
-	#Each calculation has a function (x1, x2, etc) and an associated weight (w1, w2, etc)
+	#Each calculation has a function (x0, x1, ...) and an associated weight (w0, w1, ...)
 	def self.add_calculation(&block)
 		define_method("x"+@@calc_count.to_s, &block)
 		attr_accessor ("w"+@@calc_count.to_s).to_sym
 		@@calc_count+=1
 	end
-		
+	
+	#Adding different types of board calculations to the player
 	add_calculation { |board|
 		val = board.check_all_sets { |arr|
 			board.controlled_set?(arr, @opponent.symbol, @symbol)
@@ -27,15 +28,15 @@ class Player
 	add_calculation { |board|
 		board.total_adjacent_squares(@opponent.symbol)
 	}
-	
 				
 	def initialize(symbol)
 		@symbol = symbol
 		each_w { |sym|
-			instance_variable_set(sym, 1)
+			instance_variable_set(sym, Random.rand(-1..1))
 		}
 	end
 
+	#The player will always play the board with the highest estimated value
 	def calculate_board_value(board)
 		status = board.game_status(self, @opponent)
 		
@@ -47,6 +48,8 @@ class Player
 			return 0
 		else
 		
+			#The valuation function takes the form
+			# w0 * x0 + w1 * x1 ... wn * xn
 			board_val = 0
 			each_w_and_x {	|w, x|
 				weight = instance_variable_get(w)
@@ -101,6 +104,7 @@ class Player
 		end
 	end
 	
+	#Iteratively adjust the weights of the valuation function
 	def self.learn(game, verbose)
 				
 		board = game.board_at_turn(game.history.length-2)
@@ -130,25 +134,12 @@ class Player
 		end
 		
 	end
-		
-	def print_weights
-		print "["
-		each_w { |w|
-			print " #{instance_variable_get(w)};"
-		}
-		print " ]\n"
-	end
-	
-	def print_functions(board)
-		print "["
-		each_x { |x|
-			val = send x, board
-			print " #{x.to_s}=#{val};"
-		}
-		print " ]\n"
-	end
-	
+			
 	def adjust_weights(board, next_board)
+	
+		#The weights are adjusted based on a "training" value for each board.
+		#The training value is the value estimate for the following play.
+	
 		board_val = calculate_board_value(board)
 		next_board_val = calculate_board_value(next_board)
 
@@ -176,6 +167,24 @@ class Player
 		next_board.print_board
 		puts "\n"
 	end
+	
+	def print_weights
+		print "["
+		each_w { |w|
+			print " #{instance_variable_get(w)};"
+		}
+		print " ]\n"
+	end
+	
+	def print_functions(board)
+		print "["
+		each_x { |x|
+			val = send x, board
+			print " #{x.to_s}=#{val};"
+		}
+		print " ]\n"
+	end
+
 	
 	protected
 	
