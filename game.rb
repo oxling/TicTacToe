@@ -20,6 +20,9 @@ class Game
 		@player_one = player_one
 		@player_two = player_two
 		
+		@player_one.opponent = @player_two
+		@player_two.opponent = @player_one
+		
 		player = @player_one
 		
 		while played < @board.number_of_squares

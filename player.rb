@@ -11,22 +11,10 @@ class Player
 		attr_accessor ("w"+@@calc_count.to_s).to_sym
 		@@calc_count+=1
 	end
-	
+		
 	add_calculation { |board|
-		board.check_all_sets { |arr|
-			board.controlled_set?(arr, @symbol, @opponent.symbol)
-		}
-	}
-	
-	add_calculation { |board|
-		board.check_all_sets { |arr|
+		val = board.check_all_sets { |arr|
 			board.controlled_set?(arr, @opponent.symbol, @symbol)
-		}
-	}
-	
-	add_calculation { |board|
-		board.check_all_sets { |arr|
-			board.potential_winning_set?(arr, @symbol, @opponent.symbol)
 		}
 	}
 	
@@ -35,7 +23,12 @@ class Player
 			board.potential_winning_set?(arr, @opponent.symbol, @symbol)
 		}
 	}
-			
+	
+	add_calculation { |board|
+		board.total_adjacent_squares(@opponent.symbol)
+	}
+	
+				
 	def initialize(symbol)
 		@symbol = symbol
 		each_w { |sym|
@@ -73,18 +66,23 @@ class Player
 			
 		end
 	end
+	
+	def value_for_move(board, move)
+			board.play(move[0], move[1], @symbol)
+			val = calculate_board_value(board)
+			board.play(move[0], move[1], nil)
+			
+			val
+	end
 
 	def choose_move(board)
 		moves = Board.valid_next_moves(board)
 		
 		best_move = moves.sample
-		best_val = 0
+		best_val = value_for_move(board, best_move)
 		
 		moves.each { |move|
-			board.play(move[0], move[1], @symbol)
-			val = calculate_board_value(board)
-			board.play(move[0], move[1], nil)
-			
+			val = value_for_move(board, move)
 			if val > best_val
 				best_move = move
 				best_val = val
@@ -103,33 +101,28 @@ class Player
 		end
 	end
 	
-	def learn(game, verbose)
-	
-		if verbose
-			puts "Player #{@symbol} learning:"
-		end
+	def self.learn(game, verbose)
 				
-		board = Board.new(game.board.size)
-		next_board = game.board_at_turn(1)
+		board = game.board_at_turn(game.history.length-2)
+		next_board = game.board.clone
 		
-		game.history.each { |move|
+		game.history.reverse.each { |move|
 			turn = game.history.index(move)
 			player = game.player_for_turn(turn)
 			
-			board.play(move[0], move[1], player.symbol)
-
-			if (turn < game.history.length-1)
-				next_move = game.history[turn+1]
-				next_player = game.player_for_turn(turn+1)
-				next_board.play(next_move[0], next_move[1], next_player.symbol)
-				
+			if (turn > 0)
 				if verbose
-					adjust_weights_verbose(board, next_board)
+					player.adjust_weights_verbose(board, next_board)
+					player.opponent.adjust_weights_verbose(board, next_board)
 				else
-					adjust_weights(board, next_board)
+					player.adjust_weights(board, next_board)
+					player.opponent.adjust_weights(board, next_board)
 				end
-				
+				previous_move = game.history[turn-1]
+				board.play(previous_move[0], previous_move[1], nil)										
 			end
+			
+			next_board.play(move[0], move[1], nil)
 		}	
 		
 		if verbose
@@ -145,8 +138,15 @@ class Player
 		}
 		print " ]\n"
 	end
-
-	protected
+	
+	def print_functions(board)
+		print "["
+		each_x { |x|
+			val = send x, board
+			print " #{x.to_s}=#{val};"
+		}
+		print " ]\n"
+	end
 	
 	def adjust_weights(board, next_board)
 		board_val = calculate_board_value(board)
@@ -163,13 +163,21 @@ class Player
 		next_board_val
 	end
 	
+	
 	def adjust_weights_verbose(board, next_board)
 		next_board_val = adjust_weights(board, next_board)
-				
+		
+		puts "Player #{@symbol} learning:"
 		puts "Training value for board = #{next_board_val}"
+		print_functions(board)
+		
 		board.print_board
+		print "\n"
+		next_board.print_board
 		puts "\n"
 	end
+	
+	protected
 	
 	#Iterator (each weight)
 	def each_w
@@ -183,7 +191,7 @@ class Player
 	def each_x
 		@@calc_count.times { |i|
 			sym = ("x"+i.to_s).to_sym
-			yield x
+			yield sym
 		}
 	end
 	

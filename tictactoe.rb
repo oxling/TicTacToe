@@ -11,9 +11,6 @@ def run_games(games, game_verbose, learn_verbose)
 	p1 = Player.new(:X)
 	p2 = Player.new(:O)
 	
-	p1.opponent = p2
-	p2.opponent = p1
-	
 	g = Game.new(3)
 	
 	p1_win_count = 0
@@ -43,8 +40,9 @@ def run_games(games, game_verbose, learn_verbose)
 			draw_count+=1
 		end
 		
-		p1.learn(g, learn_verbose)
-		p2.learn(g, learn_verbose)
+		Player.learn(g, learn_verbose)
+		#p1.learn(g, learn_verbose)
+		#p2.learn(g, learn_verbose)
 		
 		if game_verbose == false and learn_verbose == false
 			print "\r#{i+1}/#{games} complete. "
