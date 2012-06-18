@@ -1,6 +1,7 @@
 class Game	
 	
-	attr_accessor :history, :player_one, :player_two, :winner, :board
+	attr_accessor :history, :winner, :board
+	attr_reader :player_one, :player_two
 	
 	def initialize(size)
 		@size = size

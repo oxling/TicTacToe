@@ -72,8 +72,17 @@ class Board
 		return [d1, d2]
 	end
 	
-	def all_combinations
-		return columns+rows+diagonals
+	def all_sets
+		rows.each { |row|
+			yield row
+		}
+		columns.each { |col|
+			yield col
+		}
+		
+		diagonals.each { |d|
+			yield d
+		}		
 	end
 	
 	def self.valid_next_moves(start_board)
@@ -103,37 +112,50 @@ class Board
 		
 		adj	
 	end
-	
-	def potential_win(array, player)
-		square_count = array.count(player)
-		if array.count(nil) == 1 and square_count == @size-1
-			return true
-		else
-			return false
-		end
+		
+	def check_all_sets(&b)
+		count = 0
+		self.all_sets { |arr|
+			if yield(arr) == true
+				count+=1
+			end
+		}
+		count
 	end
 	
 	#A row that is contested between two players
-	def contested_row?(array, player, opponent)
+	def contested_set?(array, player, opponent)
 		p_count = array.count(player)
 		o_count = array.count(opponent)
 		
 		if p_count > 0 and o_count > 0
-			return true
+			true
 		else
-			return false
+			false
 		end
 	end
 	
 	#A row that is only controlled by one player
-	def potential_row?(array, player)
+	def controlled_set?(array, player, opponent)
 		p_count = array.count(player)
-		nil_count = array.count(nil)
+		o_count = array.count(opponent)
 		
-		if p_count > 0 and p_count+nil_count == @size
-			return true
+		if p_count > 0 and o_count == 0
+			true
 		else
-			return false
+			false
+		end
+	end
+	
+	#A set that is one play away from winning
+	def potential_winning_set?(array, player, opponent)
+		p_count = array.count(player)
+		o_count = array.count(opponent)
+		
+		if o_count == 0 and p_count == @size -1
+			true
+		else
+			false
 		end
 	end
 	

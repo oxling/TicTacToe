@@ -11,27 +11,35 @@ class Player
 		attr_accessor ("w"+@@calc_count.to_s).to_sym
 		@@calc_count+=1
 	end
-
+	
 	add_calculation { |board|
-			board.total_adjacent(@symbol)
+		board.check_all_sets { |arr|
+			board.controlled_set?(arr, @symbol, @opponent.symbol)
+		}
 	}
 	
 	add_calculation { |board|
-		board.total_adjacent(@opponent.symbol)
+		board.check_all_sets { |arr|
+			board.controlled_set?(arr, @opponent.symbol, @symbol)
+		}
 	}
 	
 	add_calculation { |board|
-		board.potential_winning_squares(@symbol)
+		board.check_all_sets { |arr|
+			board.potential_winning_set?(arr, @symbol, @opponent.symbol)
+		}
 	}
-
+	
 	add_calculation { |board|
-		board.potential_winning_squares(@opponent.symbol)
+		board.check_all_sets { |arr|
+			board.potential_winning_set?(arr, @opponent.symbol, @symbol)
+		}
 	}
 			
 	def initialize(symbol)
 		@symbol = symbol
 		each_w { |sym|
-			instance_variable_set(sym, Random.rand(-1..1))
+			instance_variable_set(sym, 1)
 		}
 	end
 
@@ -45,6 +53,7 @@ class Player
 		elsif status == :draw
 			return 0
 		else
+		
 			board_val = 0
 			each_w_and_x {	|w, x|
 				weight = instance_variable_get(w)
@@ -52,7 +61,16 @@ class Player
 				
 				board_val += weight*val
 			}
-			board_val
+			
+			# Make sure the value of a non-winning/losing board is bounded correctly
+			if board_val > 100
+				99
+			elsif board_val < -100
+				-99
+			else
+				board_val
+			end
+			
 		end
 	end
 
@@ -134,7 +152,7 @@ class Player
 		board_val = calculate_board_value(board)
 		next_board_val = calculate_board_value(next_board)
 
-		adj = 0.01*(next_board_val-board_val)
+		adj = 0.005*(next_board_val-board_val)
 		
 		each_w_and_x { |w, x|
 			val = send x, board
