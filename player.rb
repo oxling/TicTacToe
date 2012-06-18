@@ -1,8 +1,7 @@
 require './board.rb'
 
-
 class Player
-	@@learn_adj=0.1
+	@@learn_adj=0.005
 	
 	attr_accessor :symbol
 		
@@ -12,6 +11,9 @@ class Player
 		@w2 = Random.rand(-5..5)
 		@w3 = Random.rand(-5..5)
 		@w4 = Random.rand(-5..5)
+		@w5 = Random.rand(-5..5)
+		@w6 = Random.rand(-5..5)
+		@w7 = Random.rand(-5..5)
 	end
 
 	def calculate_board_value(board, opponent)
@@ -28,6 +30,9 @@ class Player
 						+@w2*x2(board, opponent)
 						+@w3*x3(board)
 						+@w4*x4(board, opponent)
+						+@w5*x5(board, opponent)
+						+@w6+x6(board)
+						+@w7+x7(board, opponent)
 		end
 	end
 
@@ -89,7 +94,7 @@ class Player
 		end
 		
 	end
-	
+		
 	def adjust_weights(opponent, board, next_board)
 		board_val = calculate_board_value(board, opponent)
 		next_board_val = calculate_board_value(next_board, opponent)
@@ -100,26 +105,25 @@ class Player
 		@w2 = @w2+(adj*x2(board, opponent))
 		@w3 = @w3+(adj*x3(board))
 		@w4 = @w4+(adj*x4(board, opponent))
+		@w5 = @w5+(adj*x5(board, opponent))
+		@w6 = @w6+(adj*x6(board))
+		@w7 = @w7+(adj*x7(board, opponent))
+		
+		next_board_val
 	end
 	
 	def adjust_weights_verbose(opponent, board, next_board)
-		board_val = calculate_board_value(board, opponent)
-		next_board_val = calculate_board_value(next_board, opponent)
-				
-		adj = @@learn_adj*(next_board_val-board_val)	
-			
-		@w1 = @w1+(adj*x1(board))
-		@w2 = @w2+(adj*x2(board, opponent))
-		@w3 = @w3+(adj*x3(board))
-		@w4 = @w4+(adj*x4(board, opponent))
-		
+	
+		next_board_val = adjust_weights(opponent, board, next_board)
+	
 		puts "Training value for board = #{next_board_val}"
 		board.print_board
 		puts "\n"
+		
 	end
 	
 	def print_weights
-		puts "[#{@w1}, #{@w2}, #{@w3}, #{@w4}]"
+		puts "[#{@w1}, #{@w2}, #{@w3}, #{@w4}, #{@w5}, #{@w6}, #{@w7}]"
 	end
 	
 	private :adjust_weights
@@ -140,6 +144,36 @@ class Player
 	
 	def x4(board, opponent)
 		board.potential_winning_squares(opponent.symbol)
+	end
+	
+	def x5(board, opponent)
+		count=0
+		board.all_combinations.each { |x|
+			if board.contested_row?(x, self, opponent)
+				count+=1
+			end
+		}
+		count
+	end
+	
+	def x6(board)
+		count=0
+		board.all_combinations.each { |x|
+			if board.potential_row?(x, self)
+				count+=1
+			end
+		}
+		count
+	end
+	
+	def x7(board, opponent)
+		count=0
+		board.all_combinations.each { |x|
+			if board.potential_row?(x, opponent)
+				count+=1
+			end
+		}
+		count
 	end
 
 		

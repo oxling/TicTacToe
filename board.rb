@@ -72,6 +72,10 @@ class Board
 		return [d1, d2]
 	end
 	
+	def all_combinations
+		return columns+rows+diagonals
+	end
+	
 	def self.valid_next_moves(start_board)
 		list = Array.new
 			
@@ -103,6 +107,30 @@ class Board
 	def potential_win(array, player)
 		square_count = array.count(player)
 		if array.count(nil) == 1 and square_count == @size-1
+			return true
+		else
+			return false
+		end
+	end
+	
+	#A row that is contested between two players
+	def contested_row?(array, player, opponent)
+		p_count = array.count(player)
+		o_count = array.count(opponent)
+		
+		if p_count > 0 and o_count > 0
+			return true
+		else
+			return false
+		end
+	end
+	
+	#A row that is only controlled by one player
+	def potential_row?(array, player)
+		p_count = array.count(player)
+		nil_count = array.count(nil)
+		
+		if p_count > 0 and p_count+nil_count == @size
 			return true
 		else
 			return false
