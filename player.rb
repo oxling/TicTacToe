@@ -1,21 +1,42 @@
 require './board.rb'
 
-
 class Player
-	@@learn_adj=0.1
+
+	attr_accessor :symbol, :opponent
+	@@calc_count=0
 	
-	attr_accessor :symbol
-		
-	def initialize(symbol)
-		@symbol = symbol
-		@w1 = Random.rand(-5..5)
-		@w2 = Random.rand(-5..5)
-		@w3 = Random.rand(-5..5)
-		@w4 = Random.rand(-5..5)
+	#Each calculation has a function (x1, x2, etc) and an associated weight (w1, w2, etc)
+	def self.add_calculation(&block)
+		define_method("x"+@@calc_count.to_s, &block)
+		attr_accessor ("w"+@@calc_count.to_s).to_sym
+		@@calc_count+=1
 	end
 
-	def calculate_board_value(board, opponent)
-		status = board.game_status(self, opponent)
+	add_calculation { |board|
+			board.total_adjacent(@symbol)
+	}
+	
+	add_calculation { |board|
+		board.total_adjacent(@opponent.symbol)
+	}
+	
+	add_calculation { |board|
+		board.potential_winning_squares(@symbol)
+	}
+
+	add_calculation { |board|
+		board.potential_winning_squares(@opponent.symbol)
+	}
+			
+	def initialize(symbol)
+		@symbol = symbol
+		each_w { |sym|
+			instance_variable_set(sym, Random.rand(-1..1))
+		}
+	end
+
+	def calculate_board_value(board)
+		status = board.game_status(self, @opponent)
 		
 		if status == :win
 			return 100
@@ -23,15 +44,19 @@ class Player
 			return -100
 		elsif status == :draw
 			return 0
-		else		
-			return @w1*x1(board)
-						+@w2*x2(board, opponent)
-						+@w3*x3(board)
-						+@w4*x4(board, opponent)
+		else
+			board_val = 0
+			each_w_and_x {	|w, x|
+				weight = instance_variable_get(w)
+				val = send x, board
+				
+				board_val += weight*val
+			}
+			board_val
 		end
 	end
 
-	def make_move(board, opponent)
+	def choose_move(board)
 		moves = Board.valid_next_moves(board)
 		
 		best_move = moves.sample
@@ -39,7 +64,7 @@ class Player
 		
 		moves.each { |move|
 			board.play(move[0], move[1], @symbol)
-			val = calculate_board_value(board, opponent)
+			val = calculate_board_value(board)
 			board.play(move[0], move[1], nil)
 			
 			if val > best_val
@@ -48,9 +73,7 @@ class Player
 			end
 		}
 		
-		best_board=board.clone
-		best_board.play(best_move[0], best_move[1], @symbol)
-		best_board
+		best_move
 		
 	end
 
@@ -67,20 +90,27 @@ class Player
 		if verbose
 			puts "Player #{@symbol} learning:"
 		end
+				
+		board = Board.new(game.board.size)
+		next_board = game.board_at_turn(1)
 		
-		opponent = game.opponent(self)
-		
-		game.history.reverse.each { |board|
-			turn = game.history.index(board)
-			#find the next turn
-			if (turn > 0)
-				next_board = game.history[turn]
-				board = game.history[turn-1]
+		game.history.each { |move|
+			turn = game.history.index(move)
+			player = game.player_for_turn(turn)
+			
+			board.play(move[0], move[1], player.symbol)
+
+			if (turn < game.history.length-1)
+				next_move = game.history[turn+1]
+				next_player = game.player_for_turn(turn+1)
+				next_board.play(next_move[0], next_move[1], next_player.symbol)
+				
 				if verbose
-					adjust_weights_verbose(opponent, board, next_board)
+					adjust_weights_verbose(board, next_board)
 				else
-					adjust_weights(opponent, board, next_board)
+					adjust_weights(board, next_board)
 				end
+				
 			end
 		}	
 		
@@ -89,58 +119,65 @@ class Player
 		end
 		
 	end
-	
-	def adjust_weights(opponent, board, next_board)
-		board_val = calculate_board_value(board, opponent)
-		next_board_val = calculate_board_value(next_board, opponent)
+		
+	def print_weights
+		print "["
+		each_w { |w|
+			print " #{instance_variable_get(w)};"
+		}
+		print " ]\n"
+	end
 
-		adj = @@learn_adj*(next_board_val-board_val)	
-			
-		@w1 = @w1+(adj*x1(board))
-		@w2 = @w2+(adj*x2(board, opponent))
-		@w3 = @w3+(adj*x3(board))
-		@w4 = @w4+(adj*x4(board, opponent))
+	protected
+	
+	def adjust_weights(board, next_board)
+		board_val = calculate_board_value(board)
+		next_board_val = calculate_board_value(next_board)
+
+		adj = 0.01*(next_board_val-board_val)
+		
+		each_w_and_x { |w, x|
+			val = send x, board
+			new_weight = instance_variable_get(w)+(adj*val)
+			instance_variable_set(w, new_weight)
+		}	
+					
+		next_board_val
 	end
 	
-	def adjust_weights_verbose(opponent, board, next_board)
-		board_val = calculate_board_value(board, opponent)
-		next_board_val = calculate_board_value(next_board, opponent)
+	def adjust_weights_verbose(board, next_board)
+		next_board_val = adjust_weights(board, next_board)
 				
-		adj = @@learn_adj*(next_board_val-board_val)	
-			
-		@w1 = @w1+(adj*x1(board))
-		@w2 = @w2+(adj*x2(board, opponent))
-		@w3 = @w3+(adj*x3(board))
-		@w4 = @w4+(adj*x4(board, opponent))
-		
 		puts "Training value for board = #{next_board_val}"
 		board.print_board
 		puts "\n"
 	end
 	
-	def print_weights
-		puts "[#{@w1}, #{@w2}, #{@w3}, #{@w4}]"
+	#Iterator (each weight)
+	def each_w
+		@@calc_count.times { |i|
+			sym = ("@w"+i.to_s).to_sym
+			yield sym
+		}
 	end
 	
-	private :adjust_weights
-	
-	private
-	
-	def x1(board)
-		board.total_adjacent(@symbol)
+	#Iterator (each function)
+	def each_x
+		@@calc_count.times { |i|
+			sym = ("x"+i.to_s).to_sym
+			yield x
+		}
 	end
 	
-	def x2(board, opponent)
-		board.total_adjacent(opponent.symbol)
-	end
-	
-	def x3(board)
-		board.potential_winning_squares(@symbol)
-	end
-	
-	def x4(board, opponent)
-		board.potential_winning_squares(opponent.symbol)
+	#Iterator (each weight and function)
+	def each_w_and_x
+		@@calc_count.times { |i|
+			x_sym = ("x"+i.to_s).to_sym
+			w_sym = ("@w"+i.to_s).to_sym
+			
+			yield w_sym, x_sym
+		}
 	end
 
-		
+			
 end

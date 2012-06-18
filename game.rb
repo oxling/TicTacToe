@@ -1,34 +1,32 @@
 class Game	
 	
-	attr_accessor :history, :player_one, :player_two, :winner
+	attr_accessor :history, :player_one, :player_two, :winner, :board
 	
-	def initialize(size, player_one, player_two)
-		@player_one = player_one
-		@player_two = player_two
+	def initialize(size)
 		@size = size
 	end
 	
 	def opponent(current_player)
-		if current_player == @player_one
-			return @player_two
-		else
-			return @player_one
-		end
+		current_player == @player_one ? @player_two : @player_one
 	end
 		
-	def play
+	def play(player_one, player_two)
 		played = 0
-		board = Board.new(@size)
+		@board = Board.new(@size)
 		@history = Array.new
 		@winner = nil
 
+		@player_one = player_one
+		@player_two = player_two
+		
 		player = @player_one
 		
-		while played < board.number_of_squares
-			board = player.make_move(board, opponent(player))
-			@history.push(board)
+		while played < @board.number_of_squares
+			move = player.choose_move(@board)
+			@board.play(move[0], move[1], player.symbol)
+			@history.push(move)
 			
-			if player.did_win?(board)
+			if player.did_win?(@board)
 				@winner = player
 				break
 			end
@@ -39,14 +37,18 @@ class Game
 	end
 	
 	def print_game
-		
-		@history.each { |board|
-			turn = @history.index(board)
+		board = Board.new(@board.size)
+		@history.each { |move|
+			turn = @history.index(move)
 			player = player_for_turn(turn)
+			
+			board.play(move[0], move[1], player.symbol)
+			
 			print "\n"
 			puts "Turn #{turn}: move by #{player.symbol}"
-			puts "Board with value #{player.calculate_board_value(board, opponent(player))} chosen"
+			puts "Board with value #{player.calculate_board_value(board)} chosen"
 			print "\n"
+			
 			board.print_board
 		}
 		
@@ -56,8 +58,7 @@ class Game
 	end
 	
 	def print_game_summary
-		last_play = @history.last
-		puts "Player #{@player_one.symbol}: #{last_play.game_status(@player_one, @player_two)}"
+		puts "Player #{@player_one.symbol}: #{@board.game_status(@player_one, @player_two)}"
 	end
 	
 	def player_for_turn(turn)
@@ -66,6 +67,19 @@ class Game
 		else
 			@player_two
 		end
+	end
+	
+	def board_at_turn(turn)
+		board = Board.new(@board.size)
+		
+		i=0
+		while i<=turn
+			player = player_for_turn(i)
+			move = @history[i]
+			board.play(move[0], move[1], player.symbol)
+			i+=1
+		end
+		board
 	end
 	
 	def player_for_board(board)

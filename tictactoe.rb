@@ -11,14 +11,22 @@ def run_games(games, game_verbose, learn_verbose)
 	p1 = Player.new(:X)
 	p2 = Player.new(:O)
 	
-	g = Game.new(3, p1, p2)
+	p1.opponent = p2
+	p2.opponent = p1
+	
+	g = Game.new(3)
 	
 	p1_win_count = 0
 	p2_win_count = 0
 	draw_count = 0
 	
+	first_player = p1
+	second_player = p2
+	
 	games.times { |i|
-		g.play
+		
+		g.play(first_player, second_player)
+		
 		if game_verbose == true
 			puts "----------"
 			puts "Game #{i+1}:"
@@ -38,13 +46,13 @@ def run_games(games, game_verbose, learn_verbose)
 		p1.learn(g, learn_verbose)
 		p2.learn(g, learn_verbose)
 		
-		if game_verbose == false
+		if game_verbose == false and learn_verbose == false
 			print "\r#{i+1}/#{games} complete. "
 			print "#{p1_win_count} wins, #{p2_win_count} losses, #{draw_count} draws"
 		end
 	
-		g.player_one = g.player_one == p1 ? p2 : p1
-		g.player_two = g.player_two == p2 ? p1 : p2
+		first_player = first_player == p1 ? p2 : p1
+		second_player = second_player == p2 ? p1 : p2
 	}
 	
 	print "\n\n"
@@ -58,11 +66,26 @@ def run_games(games, game_verbose, learn_verbose)
 	puts "\n"
 end
 
+# Main method
 game_verbose = false
 learn_verbose = false
 num_games = 0
+
+if ARGV.length == 0
+	puts "Usage:"
+	puts "tictactoe [-options] <number_of_games>"
+	puts "Options:"
+	puts "	-v or -verbose: Print all games and learning information."
+	puts "	-g or -game: Print all games"
+	puts "	-l or -learn: Print all learning information"
+	
+	Process.exit
+end
+
 ARGV.each do |arg|
+	
 	if arg.to_i == 0
+		
 		if (arg == "-v" or arg == "-verbose")
 			game_verbose = true
 			learn_verbose = true
@@ -74,9 +97,11 @@ ARGV.each do |arg|
 			puts "\"#{arg}\" is not valid input"
 			Process.exit
 		end
+		
 	else
 		num_games = arg.to_i
 	end
+	
 end
 
 run_games(num_games, game_verbose, learn_verbose)
