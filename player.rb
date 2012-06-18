@@ -31,7 +31,7 @@ class Player
 		end
 	end
 
-	def make_move(board, opponent)
+	def choose_move(board, opponent)
 		moves = Board.valid_next_moves(board)
 		
 		best_move = moves.sample
@@ -48,9 +48,7 @@ class Player
 			end
 		}
 		
-		best_board=board.clone
-		best_board.play(best_move[0], best_move[1], @symbol)
-		best_board
+		best_move
 		
 	end
 
@@ -70,17 +68,26 @@ class Player
 		
 		opponent = game.opponent(self)
 		
-		game.history.reverse.each { |board|
-			turn = game.history.index(board)
-			#find the next turn
-			if (turn > 0)
-				next_board = game.history[turn]
-				board = game.history[turn-1]
+		board = Board.new(game.board.size)
+		next_board = game.board_at_turn(1)
+		
+		game.history.each { |move|
+			turn = game.history.index(move)
+			player = game.player_for_turn(turn)
+			
+			board.play(move[0], move[1], player.symbol)
+
+			if (turn < game.history.length-1)
+				next_move = game.history[turn+1]
+				next_player = game.player_for_turn(turn+1)
+				next_board.play(next_move[0], next_move[1], next_player.symbol)
+				
 				if verbose
 					adjust_weights_verbose(opponent, board, next_board)
 				else
 					adjust_weights(opponent, board, next_board)
 				end
+				
 			end
 		}	
 		
@@ -100,19 +107,13 @@ class Player
 		@w2 = @w2+(adj*x2(board, opponent))
 		@w3 = @w3+(adj*x3(board))
 		@w4 = @w4+(adj*x4(board, opponent))
+		
+		next_board_val
 	end
 	
 	def adjust_weights_verbose(opponent, board, next_board)
-		board_val = calculate_board_value(board, opponent)
-		next_board_val = calculate_board_value(next_board, opponent)
+		next_board_val = adjust_weights(opponent, board, next_board)
 				
-		adj = @@learn_adj*(next_board_val-board_val)	
-			
-		@w1 = @w1+(adj*x1(board))
-		@w2 = @w2+(adj*x2(board, opponent))
-		@w3 = @w3+(adj*x3(board))
-		@w4 = @w4+(adj*x4(board, opponent))
-		
 		puts "Training value for board = #{next_board_val}"
 		board.print_board
 		puts "\n"
