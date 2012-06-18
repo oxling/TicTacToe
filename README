@@ -1,1 +1,7 @@
-Code that learns to play TicTacToe
+A Ruby script that learns to play Tic-Tac-Toe by playing against itself.
+
+Usage: tictactoe [-options] <number_of_games>
+Options:
+	-v or -verbose: Print all games and learning information.
+	-g or -game: Print all games
+	-l or -learn: Print all learning information

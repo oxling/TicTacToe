@@ -44,7 +44,7 @@ def run_games(games, game_verbose, learn_verbose)
 		
 		if game_verbose == false and learn_verbose == false
 			print "\r#{i+1}/#{games} complete. "
-			print "#{p1_win_count} wins, #{p2_win_count} losses, #{draw_count} draws"
+			print "#{p1_win_count} wins, #{p2_win_count} losses, #{draw_count} draws."
 		end
 	
 		first_player = first_player == p1 ? p2 : p1
