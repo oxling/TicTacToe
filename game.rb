@@ -22,7 +22,7 @@ class Game
 		player = @player_one
 		
 		while played < @board.number_of_squares
-			move = player.choose_move(@board, opponent(player))
+			move = player.choose_move(@board)
 			@board.play(move[0], move[1], player.symbol)
 			@history.push(move)
 			
@@ -46,7 +46,7 @@ class Game
 			
 			print "\n"
 			puts "Turn #{turn}: move by #{player.symbol}"
-			puts "Board with value #{player.calculate_board_value(board, opponent(player))} chosen"
+			puts "Board with value #{player.calculate_board_value(board)} chosen"
 			print "\n"
 			
 			board.print_board

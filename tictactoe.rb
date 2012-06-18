@@ -11,6 +11,9 @@ def run_games(games, game_verbose, learn_verbose)
 	p1 = Player.new(:X)
 	p2 = Player.new(:O)
 	
+	p1.opponent = p2
+	p2.opponent = p1
+	
 	g = Game.new(3)
 	
 	p1_win_count = 0
